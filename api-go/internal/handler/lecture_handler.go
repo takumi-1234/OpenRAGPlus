@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/takumi-1234/OpenRAG/api-go/internal/middleware"
@@ -48,6 +49,29 @@ func (h *LectureHandler) GetLecturesByUserID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, lectures)
+}
+
+func (h *LectureHandler) EnrollInLecture(c *gin.Context) {
+	lectureIDStr := c.Param("id")
+	lectureID, err := strconv.ParseInt(lectureIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lecture ID"})
+		return
+	}
+
+	userID := c.MustGet(middleware.AuthorizationPayloadKey).(int64)
+
+	err = h.service.EnrollInLecture(c.Request.Context(), userID, lectureID)
+	if err != nil {
+		if err.Error() == "enrollment limit (20) exceeded" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully enrolled in lecture"})
 }
 
 func (h *LectureHandler) DownloadDocument(c *gin.Context) {

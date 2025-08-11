@@ -1,0 +1,7 @@
+-- 0002_add_indexes_to_enrollments.sql
+
+-- user_lecture_enrollmentsテーブルのuser_idカラムにインデックスを追加
+CREATE INDEX idx_user_lecture_enrollments_user_id ON user_lecture_enrollments(user_id);
+
+-- user_lecture_enrollmentsテーブルのlecture_idカラムにインデックスを追加
+CREATE INDEX idx_user_lecture_enrollments_lecture_id ON user_lecture_enrollments(lecture_id);

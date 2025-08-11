@@ -37,3 +37,10 @@ func (r *lectureRepository) GetLecturesByUserID(ctx context.Context, userID int6
 	err := r.db.SelectContext(ctx, &lectures, query, userID)
 	return lectures, err
 }
+
+func (r *lectureRepository) CountEnrollmentsByUserID(ctx context.Context, userID int64) (int, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM user_lecture_enrollments WHERE user_id = ?`
+	err := r.db.GetContext(ctx, &count, query, userID)
+	return count, err
+}

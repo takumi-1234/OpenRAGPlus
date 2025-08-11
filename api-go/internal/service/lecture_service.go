@@ -97,3 +97,25 @@ func (s *LectureService) GetLecturesByUserID(ctx context.Context, userID int64) 
 
 	return responses, nil
 }
+
+// EnrollInLectureはユーザーを講義に登録します。
+// 履修登録数が上限（20件）に達している場合はエラーを返します。
+func (s *LectureService) EnrollInLecture(ctx context.Context, userID int64, lectureID int64) error {
+	// 履修数をチェック
+	count, err := s.lectureRepo.CountEnrollmentsByUserID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to count enrollments: %w", err)
+	}
+
+	if count >= 20 {
+		return fmt.Errorf("enrollment limit (20) exceeded")
+	}
+
+	// 講義に登録
+	err = s.lectureRepo.EnrollUserInLecture(ctx, userID, lectureID, "student")
+	if err != nil {
+		return fmt.Errorf("failed to enroll user in lecture: %w", err)
+	}
+
+	return nil
+}

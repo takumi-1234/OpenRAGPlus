@@ -5,8 +5,8 @@ import uuid
 # --- 設定 ---
 # 認証情報 (ここにメールアドレスとパスワードを入力)
 # ゲストとしてアップロードする場合は、両方を "Guest" に設定
-EMAIL = "sample1234@gmail.com"  # 例: "test@example.com"
-PASSWORD = "sample1234"  # 例: "password123"
+EMAIL = "sample@gmail.com"  # 例: "test@example.com"
+PASSWORD = "sample@gmail.com"  # 例: "password123"
 
 # アップロードするファイルがあるディレクトリ
 UPLOAD_DIR = "upload_files_test"
@@ -14,7 +14,7 @@ UPLOAD_DIR = "upload_files_test"
 # APIのベースURL
 API_GO_URL = "http://localhost:8000"
 API_PYTHON_RAG_URL = "http://localhost:8001"
-s
+
 # --- ディレクトリとテストファイルの準備 ---
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)

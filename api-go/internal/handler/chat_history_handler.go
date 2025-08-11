@@ -30,7 +30,7 @@ func (h *ChatHistoryHandler) CreateChatSession(c *gin.Context) {
 		return
 	}
 
-	lectureID, err := strconv.ParseInt(c.Param("lecture_id"), 10, 64)
+	lectureID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid lecture ID"})
 		return
@@ -50,7 +50,7 @@ func (h *ChatHistoryHandler) CreateChatSession(c *gin.Context) {
 
 // GetChatSessionsは講義に紐づくチャットセッションの一覧を取得します。
 func (h *ChatHistoryHandler) GetChatSessions(c *gin.Context) {
-	lectureID, err := strconv.ParseInt(c.Param("lecture_id"), 10, 64)
+	lectureID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid lecture ID"})
 		return

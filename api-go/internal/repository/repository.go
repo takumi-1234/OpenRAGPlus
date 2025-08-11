@@ -19,6 +19,7 @@ type LectureRepository interface {
 	CreateLecture(ctx context.Context, lecture *model.Lecture) (int64, error)
 	EnrollUserInLecture(ctx context.Context, userID, lectureID int64, role string) error
 	GetLecturesByUserID(ctx context.Context, userID int64) ([]model.Lecture, error)
+	CountEnrollmentsByUserID(ctx context.Context, userID int64) (int, error)
 }
 
 // ChatRepository はチャット関連のDB操作を定義します。

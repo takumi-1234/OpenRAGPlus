@@ -4,6 +4,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -25,13 +26,25 @@ func main() {
 		log.Fatalf("could not load config: %v", err)
 	}
 
-	// 2. データベース接続
-	db, err := sqlx.Connect("mysql", cfg.DBSource)
+	// 2. データベース接続 (リトライロジック付き)
+	var db *sqlx.DB
+	maxRetries := 10
+	retryInterval := 3 * time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		db, err = sqlx.Connect("mysql", cfg.DBSource)
+		if err == nil {
+			log.Println("Database connection successful")
+			break
+		}
+		log.Printf("could not connect to the database (attempt %d/%d): %v", i+1, maxRetries, err)
+		time.Sleep(retryInterval)
+	}
+
 	if err != nil {
-		log.Fatalf("could not connect to the database: %v", err)
+		log.Fatalf("failed to connect to the database after %d attempts: %v", maxRetries, err)
 	}
 	defer db.Close()
-	log.Println("Database connection successful")
 
 	// 3. 依存性の注入 (リポジトリ -> サービス -> ハンドラ)
 	jwtAuth := auth.NewJWTAuth(cfg.JWTSecretKey)
@@ -64,10 +77,11 @@ func main() {
 		// --- 講義関連エンドポイント ---
 		authRoutes.POST("/lectures", lectureHandler.CreateLecture)
 		authRoutes.GET("/lectures", lectureHandler.GetLecturesByUserID)
+		authRoutes.POST("/lectures/:id/enroll", lectureHandler.EnrollInLecture)
 
 		// --- チャットセッション関連エンドポイント ---
-		authRoutes.POST("/lectures/:lecture_id/sessions", chatHandler.CreateChatSession)
-		authRoutes.GET("/lectures/:lecture_id/sessions", chatHandler.GetChatSessions)
+		authRoutes.POST("/lectures/:id/sessions", chatHandler.CreateChatSession)
+		authRoutes.GET("/lectures/:id/sessions", chatHandler.GetChatSessions)
 
 		// --- チャットメッセージ関連エンドポイント ---
 		authRoutes.POST("/sessions/:session_id/messages", chatHandler.CreateChatMessage)
