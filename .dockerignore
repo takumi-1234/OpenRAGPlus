@@ -1,0 +1,33 @@
+# .dockerignore
+
+# Git history and configuration
+.git
+.gitignore
+
+# Environment files (handled by docker-compose env_file)
+.env
+.env.*
+!.env.example
+
+# IDE and OS specific files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+
+# Local data, cache, and logs
+data/
+.cache/
+tmp/
+*.log
+
+# Python virtual environments and cache
+.venv/
+venv/
+env/
+__pycache__/
+
+# Go specific
+/api-go/tmp
+/api-go/vendor

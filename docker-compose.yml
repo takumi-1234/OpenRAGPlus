@@ -1,0 +1,96 @@
+services:
+  # MySQL Database Service
+  db:
+    image: mysql:8.0
+    container_name: openrag_db
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/migration:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - openrag_network
+
+  # Go API Service
+  api-go:
+    build:
+      # ビルドコンテキストをルートに変更して .env を含める
+      context: .
+      dockerfile: ./api-go/Dockerfile
+      target: development # 開発時は 'development' ステージを使用
+    container_name: openrag_api_go
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api-go:/app # ホットリロードのためにソースコードをマウント
+      - ./.env:/app/.env # .envファイルを直接マウントしてViperが読み込めるようにする
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - openrag_network
+
+  # Python RAG Service
+  rag-python:
+    build:
+      context: ./rag-python
+      dockerfile: Dockerfile
+    container_name: openrag_rag_python
+    restart: unless-stopped
+    env_file: # 他サービスと統一
+      - .env
+    environment:
+      - ANONYMIZED_TELEMETRY=false # ChromaDBの不要なテレメトリーエラーを抑制
+    ports:
+      - "8001:8001"
+    volumes:
+      - chroma_data:/app/data/chroma
+      - huggingface_cache:/app/.cache/huggingface
+      - ./rag-python/app:/app # 開発時のホットリロード用
+    networks:
+      - openrag_network
+
+  # Streamlit Frontend Service
+  frontend-streamlit:
+    build:
+      context: ./frontend-streamlit
+      dockerfile: Dockerfile
+    container_name: openrag_frontend
+    restart: unless-stopped
+    command: streamlit run streamlit_app.py
+    env_file:
+      - .env
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./frontend-streamlit/app:/app # 開発時のホットリロード用
+    depends_on:
+      - api-go
+      - rag-python
+    networks:
+      - openrag_network
+
+volumes:
+  mysql_data:
+  chroma_data:
+  huggingface_cache:
+
+networks:
+  openrag_network:
+    driver: bridge
